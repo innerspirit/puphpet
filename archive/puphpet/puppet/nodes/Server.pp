@@ -1,5 +1,3 @@
-if $server_values == undef { $server_values = hiera_hash('server', false) }
-
 include ntp
 include swap_file
 include puphpet
@@ -22,10 +20,10 @@ case $::ssh_username {
 }
 
 user { $::ssh_username:
+  ensure     => present,
   shell      => '/bin/bash',
   home       => $user_home,
   managehome => $manage_home,
-  ensure     => present,
   groups     => ['www-data', 'www-user'],
   require    => [Group['www-data'], Group['www-user']],
 }
@@ -33,8 +31,8 @@ user { $::ssh_username:
 each( ['apache', 'nginx', 'httpd', 'www-data'] ) |$key| {
   if ! defined(User[$key]) {
     user { $key:
-      shell   => '/bin/bash',
       ensure  => present,
+      shell   => '/bin/bash',
       groups  => 'www-data',
       require => Group['www-data']
     }
@@ -88,7 +86,10 @@ case $::osfamily {
       }
     }
 
-    link_dot_files { 'do': }
+    puphpet::server::link_dotfiles { $user_home: }
+  }
+  default: {
+    error('PuPHPet currently only works with Debian and RHEL families')
   }
 }
 
@@ -96,7 +97,15 @@ case $::operatingsystem {
   'debian': {
     include apt::backports
 
-    add_dotdeb { 'packages.dotdeb.org': release => $::lsbdistcodename }
+    apt::source { 'packages.dotdeb.org-repo.puphpet':
+      location          => 'http://repo.puphpet.com/dotdeb/',
+      release           => $::lsbdistcodename,
+      repos             => 'all',
+      required_packages => 'debian-keyring debian-archive-keyring',
+      key               => '89DF5277',
+      key_server        => 'hkp://keyserver.ubuntu.com:80',
+      include_src       => true
+    }
 
     $server_lsbdistcodename = downcase($::lsbdistcodename)
 
@@ -107,72 +116,38 @@ case $::operatingsystem {
   }
   'ubuntu': {
     if ! defined(Apt::Key['4F4EA0AAE5267A6C']){
-      apt::key { '4F4EA0AAE5267A6C': key_server => 'hkp://keyserver.ubuntu.com:80' }
+      apt::key { '4F4EA0AAE5267A6C':
+        key_server => 'hkp://keyserver.ubuntu.com:80'
+      }
     }
     if ! defined(Apt::Key['4CBEDD5A']){
       apt::key { '4CBEDD5A': key_server => 'hkp://keyserver.ubuntu.com:80' }
     }
 
     if $::lsbdistcodename in ['lucid', 'precise'] {
-      apt::ppa { 'ppa:pdoes/ppa': require => Apt::Key['4CBEDD5A'], options => '' }
+      apt::ppa { 'ppa:pdoes/ppa':
+        require => Apt::Key['4CBEDD5A'],
+        options => ''
+      }
     } else {
       apt::ppa { 'ppa:pdoes/ppa': require => Apt::Key['4CBEDD5A'] }
     }
   }
   'redhat', 'centos': {
   }
+  default: {
+    error('PuPHPet supports Debian, Ubuntu, CentOS and RHEL only')
+  }
 }
 
-if is_array($server_values['packages']) and count($server_values['packages']) > 0 {
+if is_array($server_values['packages'])
+  and count($server_values['packages']) > 0
+{
   each( $server_values['packages'] ) |$package| {
     if ! defined(Package[$package]) {
       package { $package:
         ensure => present,
       }
-    }
-  }
-}
-
-define add_dotdeb ($release){
-   apt::source { "${name}-repo.puphpet":
-    location          => 'http://repo.puphpet.com/dotdeb/',
-    release           => $release,
-    repos             => 'all',
-    required_packages => 'debian-keyring debian-archive-keyring',
-    key               => '89DF5277',
-    key_server        => 'hkp://keyserver.ubuntu.com:80',
-    include_src       => true
-  }
-}
-
-define link_dot_files {
-  file_line { 'link ~/.bash_git':
-    ensure  => present,
-    line    => 'if [ -f ~/.bash_git ] ; then source ~/.bash_git; fi',
-    path    => "${user_home}/.bash_profile",
-    require => Exec['dotfiles'],
-  }
-
-  file_line { 'link ~/.bash_aliases':
-    ensure  => present,
-    line    => 'if [ -f ~/.bash_aliases ] ; then source ~/.bash_aliases; fi',
-    path    => "${user_home}/.bash_profile",
-    require => Exec['dotfiles'],
-  }
-
-  if $::ssh_username != 'root' {
-    file_line { 'link ~/.bash_git for root':
-      ensure  => present,
-      line    => 'if [ -f ~/.bash_git ] ; then source ~/.bash_git; fi',
-      path    => '/root/.bashrc',
-      require => Exec['dotfiles'],
-    }
-
-    file_line { 'link ~/.bash_aliases for root':
-      ensure  => present,
-      line    => 'if [ -f ~/.bash_aliases ] ; then source ~/.bash_aliases; fi',
-      path    => '/root/.bashrc',
-      require => Exec['dotfiles'],
     }
   }
 }
