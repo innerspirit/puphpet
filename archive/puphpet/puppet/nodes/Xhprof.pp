@@ -1,15 +1,12 @@
-if $php_values == undef { $php_values = hiera_hash('php', false) }
-if $xhprof_values == undef { $xhprof_values = hiera_hash('xhprof', false) }
-if $apache_values == undef { $apache_values = hiera_hash('apache', false) }
-if $nginx_values == undef { $nginx_values = hiera_hash('nginx', false) }
-
 include puphpet::params
 
 if hash_key_equals($xhprof_values, 'install', 1)
   and hash_key_equals($php_values, 'install', 1)
 {
   if $::operatingsystem == 'ubuntu'
-    and $::lsbdistcodename in ['lucid', 'maverick', 'natty', 'oneiric', 'precise']
+    and $::lsbdistcodename in [
+      'lucid', 'maverick', 'natty', 'oneiric', 'precise'
+    ]
   {
     apt::key { '8D0DC64F': key_server => 'hkp://keyserver.ubuntu.com:80' }
     apt::ppa { 'ppa:brianmercer/php5-xhprof': require => Apt::Key['8D0DC64F'] }
