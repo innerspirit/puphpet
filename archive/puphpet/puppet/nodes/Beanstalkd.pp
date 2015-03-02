@@ -7,12 +7,13 @@ if $nginx_values == undef { $nginx_values = hiera_hash('nginx', false) }
 include puphpet::params
 
 if hash_key_equals($apache_values, 'install', 1) {
-  $beanstalk_console_webroot_location = '/var/www/default/beanstalk_console'
+  $beanstalk_console_webroot =
+    "${puphpet::params::apache_webroot_location}/beanstalk_console"
 } elsif hash_key_equals($nginx_values, 'install', 1) {
-  $beanstalk_console_webroot_location =
+  $beanstalk_console_webroot =
     "${puphpet::params::nginx_webroot_location}/beanstalk_console"
 } else {
-  $beanstalk_console_webroot_location = undef
+  $beanstalk_console_webroot = undef
 }
 
 if hash_key_equals($php_values, 'install', 1)
@@ -29,26 +30,11 @@ if hash_key_equals($beanstalkd_values, 'install', 1) {
   })
 
   if hash_key_equals($beanstalkd_values, 'beanstalk_console', 1)
-    and $beanstalk_console_webroot_location != undef
+    and $beanstalk_console_webroot != undef
     and $beanstalkd_php_installed
   {
-    exec { 'delete-beanstalk_console-path-if-not-git-repo':
-      command => "rm -rf ${beanstalk_console_webroot_location}",
-      onlyif  => "test ! -d ${beanstalk_console_webroot_location}/.git"
-    }
-
-    vcsrepo { $beanstalk_console_webroot_location:
-      ensure   => present,
-      provider => git,
-      source   => 'https://github.com/ptrofimov/beanstalk_console.git',
-      require  => Exec['delete-beanstalk_console-path-if-not-git-repo']
-    }
-
-    file { "${beanstalk_console_webroot_location}/storage.json":
-      ensure  => present,
-      group   => 'www-data',
-      mode    => '0775',
-      require => Vcsrepo[$beanstalk_console_webroot_location]
+    class { 'puphpet::beanstalkd::console' :
+      install_location => $beanstalk_console_webroot
     }
   }
 }
