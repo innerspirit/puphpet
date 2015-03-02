@@ -30,6 +30,10 @@ if $hhvm_values == undef {
   $hhvm_values = hiera_hash('hhvm', false)
 }
 
+if $mailcatcher_values == undef {
+  $mailcatcher_values = hiera_hash('mailcatcher', false)
+}
+
 if $nginx_values == undef {
   $nginx_values = hiera_hash('nginx', false)
 }

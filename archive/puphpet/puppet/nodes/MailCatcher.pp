@@ -1,5 +1,3 @@
-if $mailcatcher_values == undef { $mailcatcher_values = hiera_hash('mailcatcher', false) }
-
 include puphpet::params
 include puphpet::supervisord
 
@@ -18,13 +16,21 @@ if hash_key_equals($mailcatcher_values, 'install', 1) {
     }
   }
 
-  $mailcatcher_settings = delete($mailcatcher_values['settings'], 'from_email_method')
+  $mailcatcher_settings = delete(
+    $mailcatcher_values['settings'],
+    'from_email_method'
+  )
 
   create_resources('class', { 'mailcatcher' => $mailcatcher_settings })
 
-  if ! defined(Firewall["100 tcp/${mailcatcher_settings['smtp_port']}, ${mailcatcher_settings['http_port']}"]) {
-    firewall { "100 tcp/${mailcatcher_settings['smtp_port']}, ${mailcatcher_settings['http_port']}":
-      port   => [$mailcatcher_settings['smtp_port'], $mailcatcher_settings['http_port']],
+  $mailcatcher_smtp_port = $mailcatcher_settings['smtp_port']
+  $mailcatcher_http_port = $mailcatcher_settings['http_port']
+  $mailcatcher_firewall_port =
+    "100 tcp/${mailcatcher_smtp_port}, ${mailcatcher_http_port}"
+
+  if ! defined(Firewall[$mailcatcher_firewall_port]) {
+    firewall { $mailcatcher_firewall_port:
+      port   => [$mailcatcher_smtp_port, $mailcatcher_http_port],
       proto  => tcp,
       action => 'accept',
     }
@@ -48,7 +54,7 @@ if hash_key_equals($mailcatcher_values, 'install', 1) {
     environment => {
       'PATH' => "/bin:/sbin:/usr/bin:/usr/sbin:${mailcatcher_path}"
     },
-    require => [
+    require     => [
       Class['mailcatcher::config'],
       File['/var/log/mailcatcher']
     ],
