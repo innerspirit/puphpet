@@ -107,84 +107,76 @@ if hash_key_equals($php_values, 'install', 1) {
 
   class { 'php::devel': }
 
-  if count($php_values['modules']['php']) > 0 {
-    each( $php_values['modules']['php'] ) |$name| {
-      if ! defined(Puphpet::Php::Module[$name]) {
-        puphpet::php::module { $name:
-          service_autorestart => $php_webserver_restart,
-        }
+  each( $php_values['modules']['php'] ) |$name| {
+    if ! defined(Puphpet::Php::Module[$name]) {
+      puphpet::php::module { $name:
+        service_autorestart => $php_webserver_restart,
       }
     }
   }
 
-  if count($php_values['modules']['pear']) > 0 {
-    each( $php_values['modules']['pear'] ) |$name| {
-      if ! defined(Puphpet::Php::Pear[$name]) {
-        puphpet::php::pear { $name:
-          service_autorestart => $php_webserver_restart,
-        }
+  each( $php_values['modules']['pear'] ) |$name| {
+    if ! defined(Puphpet::Php::Pear[$name]) {
+      puphpet::php::pear { $name:
+        service_autorestart => $php_webserver_restart,
       }
     }
   }
 
-  if count($php_values['modules']['pear']) > 0 {
-    each( $php_values['modules']['pear'] ) |$name| {
-      if ! defined(Puphpet::Php::Extra_repos[$name]) {
-        puphpet::php::extra_repos { $name:
-          before => Puphpet::Php::Pecl[$name],
-        }
+  each( $php_values['modules']['pear'] ) |$name| {
+    if ! defined(Puphpet::Php::Extra_repos[$name]) {
+      puphpet::php::extra_repos { $name:
+        before => Puphpet::Php::Pecl[$name],
       }
+    }
 
-      if ! defined(Puphpet::Php::Pecl[$name]) {
-        puphpet::php::pecl { $name:
-          service_autorestart => $php_webserver_restart,
-        }
+    if ! defined(Puphpet::Php::Pecl[$name]) {
+      puphpet::php::pecl { $name:
+        service_autorestart => $php_webserver_restart,
       }
     }
   }
 
-  if count($php_values['ini']) > 0 {
-    $php_inis = merge({
-      'cgi.fix_pathinfo' => 1,
-      'date.timezone'    => $php_values['timezone'],
-    }, $php_values['ini'])
+  $php_inis = merge({
+    'cgi.fix_pathinfo' => 1,
+    'date.timezone'    => $php_values['timezone'],
+  }, $php_values['ini'])
 
-    each( $php_inis ) |$key, $value| {
-      if is_array($value) {
-        each( $php_values['ini'][$key] ) |$innerkey, $innervalue| {
-          puphpet::php::ini { "${key}_${innerkey}":
-            entry       => "CUSTOM_${innerkey}/${key}",
-            value       => $innervalue,
-            php_version => $php_values['version'],
-            webserver   => $php_webserver_service_ini
-          }
-        }
-      } else {
-        puphpet::php::ini { $key:
-          entry       => "CUSTOM/${key}",
-          value       => $value,
+  each( $php_inis ) |$key, $value| {
+    if is_array($value) {
+      each( $php_values['ini'][$key] ) |$innerkey, $innervalue| {
+        puphpet::php::ini { "${key}_${innerkey}":
+          entry       => "CUSTOM_${innerkey}/${key}",
+          value       => $innervalue,
           php_version => $php_values['version'],
           webserver   => $php_webserver_service_ini
         }
       }
+    } else {
+      puphpet::php::ini { $key:
+        entry       => "CUSTOM/${key}",
+        value       => $value,
+        php_version => $php_values['version'],
+        webserver   => $php_webserver_service_ini
+      }
     }
+  }
 
-    if hash_key_true($php_values['ini'], 'session.save_path'){
-      $php_sess_save_path = $php_values['ini']['session.save_path']
+  if hash_key_true($php_values['ini'], 'session.save_path'){
+    $php_sess_save_path = $php_values['ini']['session.save_path']
 
-      # Handles URLs like tcp://127.0.0.1:6379
-      # absolute file paths won't have ":"
-      if ! (':' in $php_sess_save_path) {
-        exec {"mkdir -p ${php_sess_save_path}":
-          creates => $php_sess_save_path,
-          before  => Class['php']
-        }
-        -> file { $php_sess_save_path:
-          ensure => directory,
-          group  => 'www-data',
-          owner  => 'www-data',
-          mode   => '0775',
-        }
+    # Handles URLs like tcp://127.0.0.1:6379
+    # absolute file paths won't have ":"
+    if ! (':' in $php_sess_save_path) {
+      exec {"mkdir -p ${php_sess_save_path}":
+        creates => $php_sess_save_path,
+        before  => Class['php']
+      }
+      -> file { $php_sess_save_path:
+        ensure => directory,
+        group  => 'www-data',
+        owner  => 'www-data',
+        mode   => '0775',
       }
     }
   }

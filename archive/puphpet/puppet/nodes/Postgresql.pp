@@ -39,16 +39,14 @@ if hash_key_equals($postgresql_values, 'install', 1) {
       require           => Group[$postgresql_values['settings']['user_group']]
     }
 
-    if count($postgresql_values['databases']) > 0 {
-      each( $postgresql_values['databases'] ) |$key, $database| {
-        $database_merged = delete(merge($database, {
-          'dbname' => $database['name'],
-        }), 'name')
+    each( $postgresql_values['databases'] ) |$key, $database| {
+      $database_merged = delete(merge($database, {
+        'dbname' => $database['name'],
+      }), 'name')
 
-        create_resources( puphpet::postgresql::db, {
-          "${database['user']}@${database['name']}" => $database_merged
-        })
-      }
+      create_resources( puphpet::postgresql::db, {
+        "${database['user']}@${database['name']}" => $database_merged
+      })
     }
 
     if $postgresql_php_installed

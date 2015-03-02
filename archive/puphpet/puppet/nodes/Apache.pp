@@ -137,72 +137,69 @@ if hash_key_equals($apache_values, 'install', 1) {
     $apache_vhosts = $apache_values['vhosts']
   }
 
-  if count($apache_vhosts) > 0 {
-    each( $apache_vhosts ) |$key, $vhost| {
-      exec { "exec mkdir -p ${vhost['docroot']} @ key ${key}":
-        command => "mkdir -p ${vhost['docroot']}",
-        creates => $vhost['docroot'],
+  each( $apache_vhosts ) |$key, $vhost| {
+    exec { "exec mkdir -p ${vhost['docroot']} @ key ${key}":
+      command => "mkdir -p ${vhost['docroot']}",
+      creates => $vhost['docroot'],
+    }
+
+    if ! defined(File[$vhost['docroot']]) {
+      file { $vhost['docroot']:
+        ensure  => directory,
+        group   => $vhost_docroot_group,
+        mode    => '0765',
+        require => [
+          Exec["exec mkdir -p ${vhost['docroot']} @ key ${key}"],
+          Group['www-user']
+        ]
       }
+    }
 
-      if ! defined(File[$vhost['docroot']]) {
-        file { $vhost['docroot']:
-          ensure  => directory,
-          group   => $vhost_docroot_group,
-          mode    => '0765',
-          require => [
-            Exec["exec mkdir -p ${vhost['docroot']} @ key ${key}"],
-            Group['www-user']
-          ]
-        }
-      }
+    $ssl = 'ssl' in $vhost and str2bool($vhost['ssl']) ? {
+      true    => true,
+      default => false
+    }
 
-      $ssl = 'ssl' in $vhost and str2bool($vhost['ssl']) ? {
-        true    => true,
-        default => false
-      }
+    $ssl_cert = hash_key_true($vhost, 'ssl_cert') ? {
+      true    => $vhost['ssl_cert'],
+      default => $puphpet::params::ssl_cert_location
+    }
 
-      $ssl_cert = hash_key_true($vhost, 'ssl_cert') ? {
-        true    => $vhost['ssl_cert'],
-        default => $puphpet::params::ssl_cert_location
-      }
+    $ssl_key = hash_key_true($vhost, 'ssl_key') ? {
+      true    => $vhost['ssl_key'],
+      default => $puphpet::params::ssl_key_location
+    }
 
-      $ssl_key = hash_key_true($vhost, 'ssl_key') ? {
-        true    => $vhost['ssl_key'],
-        default => $puphpet::params::ssl_key_location
-      }
+    $ssl_chain = hash_key_true($vhost, 'ssl_chain') ? {
+      true    => $vhost['ssl_chain'],
+      default => undef
+    }
 
-      $ssl_chain = hash_key_true($vhost, 'ssl_chain') ? {
-        true    => $vhost['ssl_chain'],
-        default => undef
-      }
+    $ssl_certs_dir = hash_key_true($vhost, 'ssl_certs_dir') ? {
+      true    => $vhost['ssl_certs_dir'],
+      default => undef
+    }
 
-      $ssl_certs_dir = hash_key_true($vhost, 'ssl_certs_dir') ? {
-        true    => $vhost['ssl_certs_dir'],
-        default => undef
-      }
+    $vhost_merged = delete(merge($vhost, {
+      'custom_fragment' => template('puphpet/apache/custom_fragment.erb'),
+      'directories'     => values_no_error($vhost['directories']),
+      'ssl'             => $ssl,
+      'ssl_cert'        => $ssl_cert,
+      'ssl_key'         => $ssl_key,
+      'ssl_chain'       => $ssl_chain,
+      'ssl_certs_dir'   => $ssl_certs_dir
+    }), 'engine')
 
-      $vhost_merged = delete(merge($vhost, {
-        'custom_fragment' => template('puphpet/apache/custom_fragment.erb'),
-        'directories'     => values_no_error($vhost['directories']),
-        'ssl'             => $ssl,
-        'ssl_cert'        => $ssl_cert,
-        'ssl_key'         => $ssl_key,
-        'ssl_chain'       => $ssl_chain,
-        'ssl_certs_dir'   => $ssl_certs_dir
-      }), 'engine')
+    create_resources(apache::vhost, { "${key}" => $vhost_merged })
 
-      create_resources(apache::vhost, { "${key}" => $vhost_merged })
-
-      if ! defined(Firewall["100 tcp/${vhost['port']}"]) {
-        firewall { "100 tcp/${vhost['port']}":
-          port   => $vhost['port'],
-          proto  => tcp,
-          action => 'accept',
-        }
+    if ! defined(Firewall["100 tcp/${vhost['port']}"]) {
+      firewall { "100 tcp/${vhost['port']}":
+        port   => $vhost['port'],
+        proto  => tcp,
+        action => 'accept',
       }
     }
   }
-
 
   if $::osfamily == 'debian' and ! $require_mod_php {
     file { ['/var/run/apache2/ssl_mutex']:

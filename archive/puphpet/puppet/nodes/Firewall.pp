@@ -13,23 +13,19 @@ class { ['puphpet::firewall::pre', 'puphpet::firewall::post']: }
 class { 'firewall': }
 
 # All ports defined in `firewall` yaml section
-if is_hash($firewall_values['rules'])
-  and count($firewall_values['rules']) > 0
-{
-  each( $firewall_values['rules'] ) |$key, $rule| {
-    if ! defined(Puphpet::Firewall::Port[$rule['port']]) {
-      if has_key($rule, 'priority') {
-        $priority = $rule['priority']
-      } else {
-        $priority = 100
-      }
+each( $firewall_values['rules'] ) |$key, $rule| {
+  if ! defined(Puphpet::Firewall::Port[$rule['port']]) {
+    if has_key($rule, 'priority') {
+      $priority = $rule['priority']
+    } else {
+      $priority = 100
+    }
 
-      puphpet::firewall::port { $rule['port']:
-        port     => $rule['port'],
-        protocol => $rule['proto'],
-        priority => $priority,
-        action   => $rule['action'],
-      }
+    puphpet::firewall::port { $rule['port']:
+      port     => $rule['port'],
+      protocol => $rule['proto'],
+      priority => $priority,
+      action   => $rule['action'],
     }
   }
 }
@@ -52,7 +48,7 @@ if has_key($vm_values, 'ssh')
   }
 }
 
-# Opens up forwarded ports
+# Opens up forwarded ports; remote servers won't have these keys
 if has_key($vm_values, 'vm')
   and has_key($vm_values['vm'], 'network')
   and has_key($vm_values['vm']['network'], 'forwarded_port')

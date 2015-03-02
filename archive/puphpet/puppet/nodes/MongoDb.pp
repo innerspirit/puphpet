@@ -37,16 +37,14 @@ if hash_key_equals($mongodb_values, 'install', 1) {
     }
   }
 
-  if count($mongodb_values['databases']) > 0 {
-    each( $mongodb_values['databases'] ) |$key, $database| {
-      $database_merged = delete(merge($database, {
-        'dbname' => $database['name'],
-      }), 'name')
+  each( $mongodb_values['databases'] ) |$key, $database| {
+    $database_merged = delete(merge($database, {
+      'dbname' => $database['name'],
+    }), 'name')
 
-      create_resources( puphpet::mongodb::db, {
-        "${database['user']}@${database['name']}" => $database_merged
-      })
-    }
+    create_resources( puphpet::mongodb::db, {
+      "${database['user']}@${database['name']}" => $database_merged
+    })
   }
 
   if hash_key_equals($php_values, 'install', 1)

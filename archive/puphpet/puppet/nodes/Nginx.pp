@@ -124,41 +124,39 @@ if hash_key_equals($nginx_values, 'install', 1) {
     $nginx_vhosts = $nginx_values['vhosts']
   }
 
-  if count($nginx_vhosts) > 0 {
-    each( $nginx_vhosts ) |$key, $vhost| {
-      if ! defined($vhost['proxy']) or $vhost['proxy'] == '' {
-        exec { "exec mkdir -p ${vhost['www_root']} @ key ${key}":
-          command => "mkdir -p ${vhost['www_root']}",
-          creates => $vhost['www_root'],
-        }
-
-        if ! defined(File[$vhost['www_root']]) {
-          file { $vhost['www_root']:
-            ensure  => directory,
-            group   => $vhost_docroot_group,
-            mode    => '0765',
-            require => [
-              Exec["exec mkdir -p ${vhost['www_root']} @ key ${key}"],
-              Group['www-user']
-            ]
-          }
-        }
+  each( $nginx_vhosts ) |$key, $vhost| {
+    if ! defined($vhost['proxy']) or $vhost['proxy'] == '' {
+      exec { "exec mkdir -p ${vhost['www_root']} @ key ${key}":
+        command => "mkdir -p ${vhost['www_root']}",
+        creates => $vhost['www_root'],
       }
 
-      if ! defined(Firewall["100 tcp/${vhost['listen_port']}"]) {
-        firewall { "100 tcp/${vhost['listen_port']}":
-          port   => $vhost['listen_port'],
-          proto  => tcp,
-          action => 'accept',
+      if ! defined(File[$vhost['www_root']]) {
+        file { $vhost['www_root']:
+          ensure  => directory,
+          group   => $vhost_docroot_group,
+          mode    => '0765',
+          require => [
+            Exec["exec mkdir -p ${vhost['www_root']} @ key ${key}"],
+            Group['www-user']
+          ]
         }
       }
-
-      $vhost_merged = merge($vhost, {
-        'fcgi_string' => $fcgi_string,
-      })
-
-      create_resources(puphpet::nginx::host, { "${key}" => $vhost_merged })
     }
+
+    if ! defined(Firewall["100 tcp/${vhost['listen_port']}"]) {
+      firewall { "100 tcp/${vhost['listen_port']}":
+        port   => $vhost['listen_port'],
+        proto  => tcp,
+        action => 'accept',
+      }
+    }
+
+    $vhost_merged = merge($vhost, {
+      'fcgi_string' => $fcgi_string,
+    })
+
+    create_resources(puphpet::nginx::host, { "${key}" => $vhost_merged })
   }
 
   if ! defined(Firewall['100 tcp/443']) {

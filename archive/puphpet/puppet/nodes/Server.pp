@@ -142,14 +142,10 @@ case $::operatingsystem {
   }
 }
 
-if is_array($server_values['packages'])
-  and count($server_values['packages']) > 0
-{
-  each( $server_values['packages'] ) |$package| {
-    if ! defined(Package[$package]) {
-      package { $package:
-        ensure => present,
-      }
+each( $server_values['packages'] ) |$package| {
+  if ! defined(Package[$package]) {
+    package { $package:
+      ensure => present,
     }
   }
 }

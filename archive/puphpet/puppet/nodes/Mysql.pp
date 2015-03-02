@@ -63,16 +63,14 @@ if hash_key_equals($mysql_values, 'install', 1) {
       require      => $mysql_server_require
     }
 
-    if count($mysql_values['databases']) > 0 {
-      each( $mysql_values['databases'] ) |$key, $database| {
-        $database_merged = delete(merge($database, {
-          'dbname' => $database['name'],
-        }), 'name')
+    each( $mysql_values['databases'] ) |$key, $database| {
+      $database_merged = delete(merge($database, {
+        'dbname' => $database['name'],
+      }), 'name')
 
-        create_resources( puphpet::mysql::db, {
-          "${key}" => $database_merged
-        })
-      }
+      create_resources( puphpet::mysql::db, {
+        "${key}" => $database_merged
+      })
     }
 
     if $mysql_php_installed and $mysql_php_package == 'php' {

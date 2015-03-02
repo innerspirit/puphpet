@@ -97,16 +97,14 @@ if hash_key_equals($mariadb_values, 'install', 1) {
       package_name => $puphpet::params::mariadb_package_client_name
     }
 
-    if count($mariadb_values['databases']) > 0 {
-      each( $mariadb_values['databases'] ) |$key, $database| {
-        $database_merged = delete(merge($database, {
-          'dbname' => $database['name'],
-        }), 'name')
+    each( $mariadb_values['databases'] ) |$key, $database| {
+      $database_merged = delete(merge($database, {
+        'dbname' => $database['name'],
+      }), 'name')
 
-        create_resources( puphpet::mysql::db, {
-          "${database['user']}@${database['name']}" => $database_merged
-        })
-      }
+      create_resources( puphpet::mysql::db, {
+        "${database['user']}@${database['name']}" => $database_merged
+      })
     }
 
     if $mariadb_php_installed and $mariadb_php_package == 'php' {

@@ -17,22 +17,20 @@ if hash_key_equals($python_values, 'install', 1) {
     create_resources(puphpet::python::install, $python_values['versions'])
   }
 
-  if count($python_values['packages']) > 0 {
-    each( $python_values['packages'] ) |$key, $package| {
-      $package_array = split($package, '@')
-      $package_name = $package_array[0]
+  each( $python_values['packages'] ) |$key, $package| {
+    $package_array = split($package, '@')
+    $package_name = $package_array[0]
 
-      if count($package_array) == 2 {
-        $package_ensure = $package_array[1]
-      } else {
-        $package_ensure = present
-      }
+    if count($package_array) == 2 {
+      $package_ensure = $package_array[1]
+    } else {
+      $package_ensure = present
+    }
 
-      if ! defined(Package[$package_name]) {
-        package { $package_name:
-          ensure   => $package_ensure,
-          provider => pip,
-        }
+    if ! defined(Package[$package_name]) {
+      package { $package_name:
+        ensure   => $package_ensure,
+        provider => pip,
       }
     }
   }
