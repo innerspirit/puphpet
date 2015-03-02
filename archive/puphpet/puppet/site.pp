@@ -14,6 +14,10 @@ if $cron_values == undef {
   $cron_values = hiera_hash('cron', false)
 }
 
+if $drush_values == undef {
+  $drush_values = hiera_hash('drush', false)
+}
+
 if $hhvm_values == undef {
   $hhvm_values = hiera_hash('hhvm', false)
 }
