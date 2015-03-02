@@ -7,7 +7,7 @@ if hash_key_equals($wpcli_values, 'install', 1) {
     and (hash_key_equals($php_values, 'composer', 1)
           or hash_key_equals($hhvm_values, 'composer', 1))
   {
-    class { 'puphpet::wordpress::wpcli' :
+    class { 'puphpet::php::wordpress::wpcli' :
       version => $wpcli_values['version']
     }
   }
