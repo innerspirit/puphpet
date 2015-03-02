@@ -1,3 +1,5 @@
+if $usersgroups_values == undef { $usersgroups_values = hiera_hash('users_groups', false) }
+
 Group <| |> -> User <| |>
 
 if count($usersgroups_values['groups']) > 0 {

@@ -1,3 +1,8 @@
+if $php_values == undef { $php_values = hiera_hash('php', false) }
+if $apache_values == undef { $apache_values = hiera_hash('apache', false) }
+if $nginx_values == undef { $nginx_values = hiera_hash('nginx', false) }
+if $mailcatcher_values == undef { $mailcatcher_values = hiera_hash('mailcatcher', false) }
+
 include puphpet::params
 
 if hash_key_equals($php_values, 'install', 1) {

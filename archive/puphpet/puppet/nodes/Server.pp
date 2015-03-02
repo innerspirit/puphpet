@@ -1,3 +1,5 @@
+if $server_values == undef { $server_values = hiera_hash('server', false) }
+
 include ntp
 include swap_file
 include puphpet

@@ -1,3 +1,5 @@
+if $elasticsearch_values == undef { $elasticsearch_values = hiera_hash('elastic_search', false) }
+
 include puphpet::params
 
 if hash_key_equals($elasticsearch_values, 'install', 1) {
@@ -28,7 +30,7 @@ if hash_key_equals($elasticsearch_values, 'install', 1) {
   $elasticsearch_settings = delete(merge($elasticsearch_values['settings'], {
     'java_install' => false,
     'package_url'  => $es_package_url,
-    require        => Class['my_fw::post'],
+    require        => Class['puphpet::firewall::post'],
   }), 'version')
 
   create_resources('class', { 'elasticsearch' => $elasticsearch_settings })

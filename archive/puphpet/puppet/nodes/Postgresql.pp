@@ -1,3 +1,7 @@
+if $postgresql_values == undef { $postgresql_values = hiera_hash('postgresql', false) }
+if $php_values == undef { $php_values = hiera_hash('php', false) }
+if $hhvm_values == undef { $hhvm_values = hiera_hash('hhvm', false) }
+
 include puphpet::params
 
 if hash_key_equals($postgresql_values, 'install', 1) {
@@ -63,7 +67,7 @@ if hash_key_equals($postgresql_values, 'install', 1) {
     if hash_key_equals($apache_values, 'install', 1) {
       $postgresql_adminer_webroot_location = '/var/www/default'
     } elsif hash_key_equals($nginx_values, 'install', 1) {
-      nginx_webroot = $puphpet::params::nginx_webroot_location
+      $nginx_webroot = $puphpet::params::nginx_webroot_location
       $postgresql_adminer_webroot_location = nginx_webroot
     } else {
       $postgresql_adminer_webroot_location = '/var/www/default'

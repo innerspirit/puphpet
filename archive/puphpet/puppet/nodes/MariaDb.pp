@@ -1,3 +1,9 @@
+if $mariadb_values == undef { $mariadb_values = hiera_hash('mariadb', false) }
+if $php_values == undef { $php_values = hiera_hash('php', false) }
+if $hhvm_values == undef { $hhvm_values = hiera_hash('hhvm', false) }
+if $apache_values == undef { $apache_values = hiera_hash('apache', false) }
+if $nginx_values == undef { $nginx_values = hiera_hash('nginx', false) }
+
 include puphpet::params
 
 if hash_key_equals($mariadb_values, 'install', 1) {

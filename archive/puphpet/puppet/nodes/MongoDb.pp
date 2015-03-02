@@ -1,3 +1,8 @@
+if $mongodb_values == undef { $mongodb_values = hiera_hash('mongodb', false) }
+if $php_values == undef { $php_values = hiera_hash('php', false) }
+if $apache_values == undef { $apache_values = hiera_hash('apache', false) }
+if $nginx_values == undef { $nginx_values = hiera_hash('nginx', false) }
+
 include puphpet::params
 
 if hash_key_equals($apache_values, 'install', 1)

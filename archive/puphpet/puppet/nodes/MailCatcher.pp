@@ -1,3 +1,5 @@
+if $mailcatcher_values == undef { $mailcatcher_values = hiera_hash('mailcatcher', false) }
+
 include puphpet::params
 include puphpet::supervisord
 

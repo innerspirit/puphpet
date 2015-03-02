@@ -1,7 +1,9 @@
+if $solr_values == undef { $solr_values = hiera_hash('solr', false) }
+
 include solr::params
 
 if hash_key_equals($solr_values, 'install', 1) {
-  $solr_settings = solr_values['settings']
+  $solr_settings = $solr_values['settings']
 
   exec { 'create solr conf dir':
     command => "mkdir -p ${solr::params::config_dir}",

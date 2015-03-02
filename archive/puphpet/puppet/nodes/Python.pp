@@ -1,3 +1,5 @@
+if $python_values == undef { $python_values = hiera_hash('python', false) }
+
 include puphpet::params
 
 if hash_key_equals($python_values, 'install', 1) {

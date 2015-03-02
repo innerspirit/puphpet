@@ -1,3 +1,5 @@
+if $nodejs_values == undef { $nodejs_values = hiera_hash('nodejs', false) }
+
 include puphpet::params
 
 if hash_key_equals($nodejs_values, 'install', 1) {
