@@ -18,6 +18,10 @@ if $drush_values == undef {
   $drush_values = hiera_hash('drush', false)
 }
 
+if $elasticsearch_values == undef {
+  $elasticsearch_values = hiera_hash('elastic_search', false)
+}
+
 if $hhvm_values == undef {
   $hhvm_values = hiera_hash('hhvm', false)
 }
