@@ -34,6 +34,10 @@ if $mailcatcher_values == undef {
   $mailcatcher_values = hiera_hash('mailcatcher', false)
 }
 
+if $mariadb_values == undef {
+  $mariadb_values = hiera_hash('mariadb', false)
+}
+
 if $nginx_values == undef {
   $nginx_values = hiera_hash('nginx', false)
 }

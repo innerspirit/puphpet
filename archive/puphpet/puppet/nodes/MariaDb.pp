@@ -1,9 +1,3 @@
-if $mariadb_values == undef { $mariadb_values = hiera_hash('mariadb', false) }
-if $php_values == undef { $php_values = hiera_hash('php', false) }
-if $hhvm_values == undef { $hhvm_values = hiera_hash('hhvm', false) }
-if $apache_values == undef { $apache_values = hiera_hash('apache', false) }
-if $nginx_values == undef { $nginx_values = hiera_hash('nginx', false) }
-
 include puphpet::params
 
 if hash_key_equals($mariadb_values, 'install', 1) {
@@ -27,7 +21,9 @@ if hash_key_equals($mariadb_values, 'install', 1) {
     $mariadb_php_installed = false
   }
 
-  if has_key($mariadb_values, 'root_password') and $mariadb_values['root_password'] {
+  if has_key($mariadb_values, 'root_password')
+    and $mariadb_values['root_password']
+  {
     if ! defined(File[$mysql::params::datadir]) {
       file { $mysql::params::datadir:
         ensure => directory,
@@ -128,10 +124,12 @@ if hash_key_equals($mariadb_values, 'install', 1) {
     and $mariadb_php_installed
     and ! defined(Class['puphpet::adminer'])
   {
+    $nginx_webroot = $puphpet::params::nginx_webroot_location
+
     if hash_key_equals($apache_values, 'install', 1) {
       $mariadb_adminer_webroot_location = '/var/www/default'
     } elsif hash_key_equals($nginx_values, 'install', 1) {
-      $mariadb_adminer_webroot_location = $puphpet::params::nginx_webroot_location
+      $mariadb_adminer_webroot_location = $nginx_webroot
     } else {
       $mariadb_adminer_webroot_location = '/var/www/default'
     }
