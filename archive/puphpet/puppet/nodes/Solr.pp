@@ -23,7 +23,7 @@ if hash_key_equals($solr_values, 'install', 1) {
 
   class { 'solr':
     install        => 'source',
-    install_source => "${install_url}/${install_file}",
+    install_source => "${solr_source_url}/${solr_source_file}",
     require        => [
       Exec['create solr conf dir'],
       Class['java']
@@ -40,7 +40,7 @@ if hash_key_equals($solr_values, 'install', 1) {
 
   $solr_destination = $solr::params::install_destination
 
-  $solr_path = "${solr_destination}/solr-${solr_settings['version']}/bin"
+  $solr_path = "${solr_destination}/solr-${solr_version}/bin"
 
   supervisord::program { 'solr':
     command     => "${solr_path}/solr start -p ${solr_settings['port']}",
