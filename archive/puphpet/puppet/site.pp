@@ -58,4 +58,8 @@ if $vm_values == undef {
   $vm_values = hiera_hash($::vm_target_key, false)
 }
 
+if $yaml_values == undef {
+  $yaml_values = loadyaml('/vagrant/puphpet/config.yaml')
+}
+
 import 'nodes/*.pp'
