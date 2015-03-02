@@ -1,5 +1,3 @@
-if $usersgroups_values == undef { $usersgroups_values = hiera_hash('users_groups', false) }
-
 Group <| |> -> User <| |>
 
 if count($usersgroups_values['groups']) > 0 {
@@ -34,10 +32,10 @@ if count($usersgroups_values['users']) > 0 {
 
     if ! defined(User[$user]) {
       user { $user:
+        ensure     => present,
         shell      => '/bin/bash',
         home       => "/home/${user}",
         managehome => true,
-        ensure     => present,
         groups     => $groups,
       }
     }

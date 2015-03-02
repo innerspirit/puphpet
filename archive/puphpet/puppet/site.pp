@@ -20,6 +20,7 @@ $ruby_values = hiera_hash('ruby', false)
 $server_values = hiera_hash('server', false)
 $solr_values = hiera_hash('solr', false)
 $sqlite_values = hiera_hash('sqlite', false)
+$usersgroups_values = hiera_hash('users_groups', false)
 $vm_values = hiera_hash($::vm_target_key, false)
 $yaml_values = loadyaml('/vagrant/puphpet/config.yaml')
 
