@@ -10,6 +10,10 @@ if $beanstalkd_values == undef {
   $beanstalkd_values = hiera_hash('beanstalkd', false)
 }
 
+if $cron_values == undef {
+  $cron_values = hiera_hash('cron', false)
+}
+
 if $hhvm_values == undef {
   $hhvm_values = hiera_hash('hhvm', false)
 }
