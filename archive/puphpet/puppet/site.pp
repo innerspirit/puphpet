@@ -38,6 +38,10 @@ if $mariadb_values == undef {
   $mariadb_values = hiera_hash('mariadb', false)
 }
 
+if $mongodb_values == undef {
+  $mongodb_values = hiera_hash('mongodb', false)
+}
+
 if $nginx_values == undef {
   $nginx_values = hiera_hash('nginx', false)
 }
