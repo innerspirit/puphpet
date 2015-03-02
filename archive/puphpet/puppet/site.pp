@@ -13,6 +13,7 @@ $nginx_values = hiera_hash('nginx', false)
 $nodejs_values = hiera_hash('nodejs', false)
 $php_values = hiera_hash('php', false)
 $postgresql_values = hiera_hash('postgresql', false)
+$python_values = hiera_hash('python', false)
 $vm_values = hiera_hash($::vm_target_key, false)
 $yaml_values = loadyaml('/vagrant/puphpet/config.yaml')
 
