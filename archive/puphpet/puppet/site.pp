@@ -22,6 +22,10 @@ if $elasticsearch_values == undef {
   $elasticsearch_values = hiera_hash('elastic_search', false)
 }
 
+if $firewall_values == undef {
+  $firewall_values = hiera_hash('firewall', false)
+}
+
 if $hhvm_values == undef {
   $hhvm_values = hiera_hash('hhvm', false)
 }
@@ -32,6 +36,10 @@ if $nginx_values == undef {
 
 if $php_values == undef {
   $php_values = hiera_hash('php', false)
+}
+
+if $vm_values == undef {
+  $vm_values = hiera_hash($::vm_target_key, false)
 }
 
 import 'nodes/*.pp'
