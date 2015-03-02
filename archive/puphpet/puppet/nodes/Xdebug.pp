@@ -1,8 +1,3 @@
-if $xdebug_values == undef { $xdebug_values = hiera_hash('xdebug', false) }
-if $php_values == undef { $php_values = hiera_hash('php', false) }
-if $apache_values == undef { $apache_values = hiera_hash('apache', false) }
-if $nginx_values == undef { $nginx_values = hiera_hash('nginx', false) }
-
 include puphpet::params
 
 if hash_key_equals($xdebug_values, 'install', 1)
@@ -36,7 +31,9 @@ if hash_key_equals($xdebug_values, 'install', 1)
     compile   => $xdebug_compile,
   }
 
-  if is_hash($xdebug_values['settings']) and count($xdebug_values['settings']) > 0 {
+  if is_hash($xdebug_values['settings'])
+    and count($xdebug_values['settings']) > 0
+  {
     each( $xdebug_values['settings'] ) |$key, $value| {
       puphpet::php::ini { $key:
         entry       => "XDEBUG/${key}",

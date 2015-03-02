@@ -23,6 +23,7 @@ $sqlite_values = hiera_hash('sqlite', false)
 $usersgroups_values = hiera_hash('users_groups', false)
 $vm_values = hiera_hash($::vm_target_key, false)
 $wpcli_values = hiera_hash('wpcli', false)
+$xdebug_values = hiera_hash('xdebug', false)
 $yaml_values = loadyaml('/vagrant/puphpet/config.yaml')
 
 import 'nodes/*.pp'
