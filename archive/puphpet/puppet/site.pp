@@ -16,6 +16,7 @@ $postgresql_values = hiera_hash('postgresql', false)
 $python_values = hiera_hash('python', false)
 $rabbitmq_values = hiera_hash('rabbitmq', false)
 $redis_values = hiera_hash('redis', false)
+$ruby_values = hiera_hash('ruby', false)
 $vm_values = hiera_hash($::vm_target_key, false)
 $yaml_values = loadyaml('/vagrant/puphpet/config.yaml')
 
