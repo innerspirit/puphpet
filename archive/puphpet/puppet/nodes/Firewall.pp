@@ -12,22 +12,29 @@ class { ['puphpet::firewall::pre', 'puphpet::firewall::post']: }
 
 class { 'firewall': }
 
+# All ports defined in `firewall` yaml section
 if is_hash($firewall_values['rules'])
   and count($firewall_values['rules']) > 0
 {
   each( $firewall_values['rules'] ) |$key, $rule| {
-    $firewall_rule = "${rule['priority']} ${rule['proto']}/${rule['port']}"
+    if ! defined(Puphpet::firewall::port[$rule['port']]) {
+      if has_key($rule, 'priority') {
+        $priority = $rule['priority']
+      } else {
+        $priority = 100
+      }
 
-    if ! defined(Firewall[$firewall_rule]) {
-      firewall { $firewall_rule:
-        port   => $rule['port'],
-        proto  => $rule['proto'],
-        action => $rule['action'],
+      puphpet::firewall::port { $rule['port']:
+        port     => $rule['port'],
+        protocol => $rule['proto'],
+        priority => $priority,
+        action   => $rule['action'],
       }
     }
   }
 }
 
+# Opens up SSH port defined in `vagrantfile-*` section
 if has_key($vm_values, 'ssh')
   and has_key($vm_values['ssh'], 'port')
 {
@@ -38,20 +45,23 @@ if has_key($vm_values, 'ssh')
     default => $vm_values['ssh']['port']
   }
 
-  if ! defined(Firewall["100 tcp/${vm_values_ssh_port}"]) {
-    firewall { "100 tcp/${vm_values_ssh_port}":
-      port   => $vm_values_ssh_port,
-      proto  => tcp,
-      action => 'accept',
-      before => Class['puphpet::firewall::post']
+  if ! defined(Puphpet::firewall::port[$vm_values_ssh_port]) {
+    puphpet::firewall::port { $vm_values_ssh_port:
+      port => $vm_values_ssh_port,
     }
   }
 }
 
+# Opens up forwarded ports
 if has_key($vm_values, 'vm')
   and has_key($vm_values['vm'], 'network')
   and has_key($vm_values['vm']['network'], 'forwarded_port')
 {
-  $firewall_forwarded_port = $vm_values['vm']['network']['forwarded_port']
-  create_resources( puphpet::firewall::port, $firewall_forwarded_port )
+  each( $vm_values['vm']['network']['forwarded_port'] ) |$key, $ports| {
+    if ! defined(Puphpet::firewall::port[$ports['guest']]) {
+      puphpet::firewall::port { $ports['guest']:
+        port => $ports['guest'],
+      }
+    }
+  }
 }
