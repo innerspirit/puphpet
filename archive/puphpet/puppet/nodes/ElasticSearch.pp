@@ -3,7 +3,7 @@ include puphpet::params
 if hash_key_equals($elasticsearch_values, 'install', 1) {
   $es_version = $elasticsearch_values['settings']['version']
 
-  $url_base = 'https://download.elasticsearch.org/elasticsearch/elasticsearch/'
+  $url_base = 'https://download.elasticsearch.org/elasticsearch/elasticsearch'
 
   case $::osfamily {
     'debian': {
