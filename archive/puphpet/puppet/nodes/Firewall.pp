@@ -17,7 +17,7 @@ if is_hash($firewall_values['rules'])
   and count($firewall_values['rules']) > 0
 {
   each( $firewall_values['rules'] ) |$key, $rule| {
-    if ! defined(Puphpet::firewall::port[$rule['port']]) {
+    if ! defined(Puphpet::Firewall::Port[$rule['port']]) {
       if has_key($rule, 'priority') {
         $priority = $rule['priority']
       } else {
@@ -45,7 +45,7 @@ if has_key($vm_values, 'ssh')
     default => $vm_values['ssh']['port']
   }
 
-  if ! defined(Puphpet::firewall::port[$vm_values_ssh_port]) {
+  if ! defined(Puphpet::Firewall::Port[$vm_values_ssh_port]) {
     puphpet::firewall::port { $vm_values_ssh_port:
       port => $vm_values_ssh_port,
     }
@@ -58,7 +58,7 @@ if has_key($vm_values, 'vm')
   and has_key($vm_values['vm']['network'], 'forwarded_port')
 {
   each( $vm_values['vm']['network']['forwarded_port'] ) |$key, $ports| {
-    if ! defined(Puphpet::firewall::port[$ports['guest']]) {
+    if ! defined(Puphpet::Firewall::Port[$ports['guest']]) {
       puphpet::firewall::port { $ports['guest']:
         port => $ports['guest'],
       }
