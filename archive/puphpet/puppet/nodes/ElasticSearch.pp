@@ -3,6 +3,7 @@ if $elasticsearch_values == undef { $elasticsearch_values = hiera_hash('elastic_
 include puphpet::params
 
 if hash_key_equals($elasticsearch_values, 'install', 1) {
+  $es_settings = $elasticsearch_values['settings']
   $es_version = $elasticsearch_values['settings']['version']
 
   $url_base = 'https://download.elasticsearch.org/elasticsearch/elasticsearch'
@@ -20,18 +21,18 @@ if hash_key_equals($elasticsearch_values, 'install', 1) {
   }
 
   if ! defined(Class['java'])
-    and $elasticsearch_values['settings']['java_install']
+    and $es_settings['java_install']
   {
     class { 'java':
       distribution => 'jre',
     }
   }
 
-  $elasticsearch_settings = delete(merge($elasticsearch_values['settings'], {
+  $es_settings_merged = delete(merge($es_settings, {
     'java_install' => false,
     'package_url'  => $es_package_url,
     require        => Class['puphpet::firewall::post'],
   }), 'version')
 
-  create_resources('class', { 'elasticsearch' => $elasticsearch_settings })
+  create_resources('class', { 'elasticsearch' => $es_settings_merged })
 }
