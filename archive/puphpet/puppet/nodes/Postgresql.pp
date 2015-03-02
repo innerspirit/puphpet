@@ -1,7 +1,3 @@
-if $postgresql_values == undef { $postgresql_values = hiera_hash('postgresql', false) }
-if $php_values == undef { $php_values = hiera_hash('php', false) }
-if $hhvm_values == undef { $hhvm_values = hiera_hash('hhvm', false) }
-
 include puphpet::params
 
 if hash_key_equals($postgresql_values, 'install', 1) {
@@ -45,7 +41,7 @@ if hash_key_equals($postgresql_values, 'install', 1) {
           'dbname' => $database['name'],
         }), 'name')
 
-        create_resources( postgresql_db, {
+        create_resources( puphpet::postgresql::db, {
           "${database['user']}@${database['name']}" => $database_merged
         })
       }
@@ -61,11 +57,14 @@ if hash_key_equals($postgresql_values, 'install', 1) {
     }
   }
 
-  if hash_key_equals($postgresql_values, 'adminer', 1) and $postgresql_php_installed {
+  if hash_key_equals($postgresql_values, 'adminer', 1)
+    and $postgresql_php_installed
+  {
     if hash_key_equals($apache_values, 'install', 1) {
       $postgresql_adminer_webroot_location = '/var/www/default'
     } elsif hash_key_equals($nginx_values, 'install', 1) {
-      $postgresql_adminer_webroot_location = $puphpet::params::nginx_webroot_location
+      nginx_webroot = $puphpet::params::nginx_webroot_location
+      $postgresql_adminer_webroot_location = nginx_webroot
     } else {
       $postgresql_adminer_webroot_location = '/var/www/default'
     }
@@ -74,70 +73,6 @@ if hash_key_equals($postgresql_values, 'install', 1) {
       location    => "${postgresql_adminer_webroot_location}/adminer",
       owner       => 'www-data',
       php_package => $postgresql_php_package
-    }
-  }
-}
-
-define postgresql_db (
-  $dbname,
-  $user,
-  $password,
-  $encoding   = $postgresql::server::encoding,
-  $locale     = $postgresql::server::locale,
-  $grant      = 'ALL',
-  $tablespace = undef,
-  $template   = 'template0',
-  $istemplate = false,
-  $owner      = undef,
-  $sql_file   = false
-) {
-  if ! value_true($dbname) or ! value_true($user)
-    or ! value_true($password)
-  {
-    fail( 'PostgreSQL DB requires that name, user, password and grant be set. Please check your settings!' )
-  }
-
-  if ! defined(Postgresql::Server::Database[$dbname]) {
-    postgresql::server::database { $dbname:
-      encoding   => $encoding,
-      tablespace => $tablespace,
-      template   => $template,
-      locale     => $locale,
-      istemplate => $istemplate,
-      owner      => $owner,
-    }
-  }
-
-  if ! defined(Postgresql::Server::Role[$user]) {
-    postgresql::server::role { $user:
-      password_hash => postgresql_password($user, $password),
-    }
-  }
-
-  $grant_string = "GRANT ${user} - ${grant} - ${dbname}"
-
-  if ! defined(Postgresql::Server::Database_grant[$grant_string]) {
-    postgresql::server::database_grant { $grant_string:
-      privilege => $grant,
-      db        => $dbname,
-      role      => $user,
-    }
-  }
-
-  if($tablespace != undef and defined(Postgresql::Server::Tablespace[$tablespace])) {
-    Postgresql::Server::Tablespace[$tablespace] -> Postgresql::Server::Database[$dbname]
-  }
-
-  if $sql_file {
-    $table = "${dbname}.*"
-
-    exec{ "${dbname}-import":
-      command     => "sudo -u postgres psql ${dbname} < ${sql_file}",
-      logoutput   => true,
-      refreshonly => true,
-      require     => Postgresql::Server::Database_grant[$grant_string],
-      onlyif      => "test -f ${sql_file}",
-      subscribe   => Postgresql::Server::Database[$dbname],
     }
   }
 }
