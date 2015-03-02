@@ -119,14 +119,14 @@ if hash_key_equals($apache_values, 'install', 1) {
     $apache_vhosts = merge($apache_values['vhosts'], {
       'default_vhost_80'  => {
         'servername'    => 'default',
-        'docroot'       => '/var/www/default',
+        'docroot'       => $puphpet::params::apache_webroot_location,
         'port'          => 80,
         'default_vhost' => true,
         'engine'        => $default_vhost_engine,
       },
       'default_vhost_443' => {
         'servername'    => 'default',
-        'docroot'       => '/var/www/default',
+        'docroot'       => $puphpet::params::apache_webroot_location,
         'port'          => 443,
         'default_vhost' => true,
         'ssl'           => 1,

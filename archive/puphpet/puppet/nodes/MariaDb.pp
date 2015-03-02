@@ -128,14 +128,15 @@ if hash_key_equals($mariadb_values, 'install', 1) {
     and $mariadb_php_installed
     and ! defined(Class['puphpet::adminer'])
   {
-    $nginx_webroot = $puphpet::params::nginx_webroot_location
+    $mariadb_apache_webroot = $puphpet::params::apache_webroot_location
+    $mariadb_nginx_webroot = $puphpet::params::nginx_webroot_location
 
     if hash_key_equals($apache_values, 'install', 1) {
-      $mariadb_adminer_webroot_location = '/var/www/default'
+      $mariadb_adminer_webroot_location = $mariadb_apache_webroot
     } elsif hash_key_equals($nginx_values, 'install', 1) {
-      $mariadb_adminer_webroot_location = $nginx_webroot
+      $mariadb_adminer_webroot_location = $mariadb_nginx_webroot
     } else {
-      $mariadb_adminer_webroot_location = '/var/www/default'
+      $mariadb_adminer_webroot_location = $mariadb_apache_webroot
     }
 
     class { 'puphpet::adminer':

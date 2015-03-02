@@ -94,12 +94,15 @@ if hash_key_equals($mysql_values, 'install', 1) {
     and $mysql_php_installed
     and ! defined(Class['puphpet::adminer'])
   {
+    $mysql_apache_webroot = $puphpet::params::apache_webroot_location
+    $mysql_nginx_webroot = $puphpet::params::nginx_webroot_location
+
     if hash_key_equals($apache_values, 'install', 1) {
-      $mysql_adminer_webroot_location = '/var/www/default'
+      $mysql_adminer_webroot_location = $mysql_apache_webroot
     } elsif hash_key_equals($nginx_values, 'install', 1) {
-      $mysql_adminer_webroot_location = $puphpet::params::nginx_webroot_location
+      $mysql_adminer_webroot_location = $mysql_nginx_webroot
     } else {
-      $mysql_adminer_webroot_location = '/var/www/default'
+      $mysql_adminer_webroot_location = $mysql_apache_webroot
     }
 
     class { 'puphpet::adminer':

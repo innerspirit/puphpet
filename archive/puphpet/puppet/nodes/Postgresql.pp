@@ -62,13 +62,16 @@ if hash_key_equals($postgresql_values, 'install', 1) {
   if hash_key_equals($postgresql_values, 'adminer', 1)
     and $postgresql_php_installed
   {
+    $postgre_apache_webroot = $puphpet::params::apache_webroot_location
+    $postgre_nginx_webroot = $puphpet::params::nginx_webroot_location
+
     if hash_key_equals($apache_values, 'install', 1) {
-      $postgresql_adminer_webroot_location = '/var/www/default'
+      $postgresql_adminer_webroot_location = $postgre_apache_webroot
     } elsif hash_key_equals($nginx_values, 'install', 1) {
       $nginx_webroot = $puphpet::params::nginx_webroot_location
-      $postgresql_adminer_webroot_location = nginx_webroot
+      $postgresql_adminer_webroot_location = $postgre_nginx_webroot
     } else {
-      $postgresql_adminer_webroot_location = '/var/www/default'
+      $postgresql_adminer_webroot_location = $postgre_apache_webroot
     }
 
     class { 'puphpet::adminer':

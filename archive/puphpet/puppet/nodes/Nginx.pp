@@ -70,7 +70,7 @@ if hash_key_equals($nginx_values, 'install', 1) {
     $default_vhost = {
       'server_name'          => '_',
       'server_aliases'       => [],
-      'www_root'             => '/var/www/html',
+      'www_root'             => $puphpet::params::nginx_webroot_location,
       'proxy'                => '',
       'listen_port'          => 80,
       'location'             => '\.php$',
@@ -90,7 +90,7 @@ if hash_key_equals($nginx_values, 'install', 1) {
     $default_vhost = {
       'server_name'          => '_',
       'server_aliases'       => [],
-      'www_root'             => '/var/www/html',
+      'www_root'             => $puphpet::params::nginx_webroot_location,
       'proxy'                => '',
       'listen_port'          => 80,
       'location'             => '/',
