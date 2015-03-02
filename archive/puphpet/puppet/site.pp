@@ -42,6 +42,10 @@ if $mongodb_values == undef {
   $mongodb_values = hiera_hash('mongodb', false)
 }
 
+if $mysql_values == undef {
+  $mysql_values = hiera_hash('mysql', false)
+}
+
 if $nginx_values == undef {
   $nginx_values = hiera_hash('nginx', false)
 }

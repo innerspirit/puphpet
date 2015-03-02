@@ -1,8 +1,3 @@
-if $mysql_values == undef { $mysql_values = hiera_hash('mysql', false) }
-if $php_values == undef { $php_values = hiera_hash('php', false) }
-if $apache_values == undef { $apache_values = hiera_hash('apache', false) }
-if $nginx_values == undef { $nginx_values = hiera_hash('nginx', false) }
-
 include puphpet::params
 
 if hash_key_equals($mysql_values, 'install', 1) {
@@ -17,9 +12,12 @@ if hash_key_equals($mysql_values, 'install', 1) {
   }
 
   if $::osfamily == 'redhat' {
+    $mysql_rhel_yum   = "yum -y --nogpgcheck install '${rhel_mysql}'"
+    $mysql_rhel_touch = 'touch /.puphpet-stuff/mysql-community-release'
+
     $rhel_mysql = 'http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm'
     exec { 'mysql-community-repo':
-      command => "yum -y --nogpgcheck install '${rhel_mysql}' && touch /.puphpet-stuff/mysql-community-release",
+      command => "${mysql_rhel_yum} && ${mysql_rhel_touch}",
       creates => '/.puphpet-stuff/mysql-community-release'
     }
 
