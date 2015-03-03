@@ -30,12 +30,8 @@ if hash_key_equals($solr_values, 'install', 1) {
     ],
   }
 
-  if ! defined(Firewall["100 tcp/${solr_settings['port']}"]) {
-    firewall { "100 tcp/${solr_values['port']}":
-      port   => $solr_values['port'],
-      proto  => tcp,
-      action => 'accept',
-    }
+  if ! defined(Puphpet::Firewall::Port[$solr_settings['port']]) {
+    puphpet::firewall::port { $solr_settings: }
   }
 
   $solr_destination = $solr::params::install_destination

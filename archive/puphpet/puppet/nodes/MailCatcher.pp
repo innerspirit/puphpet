@@ -25,17 +25,12 @@ if hash_key_equals($mailcatcher_values, 'install', 1) {
 
   create_resources('class', { 'mailcatcher' => $mailcatcher_settings })
 
-  $mailcatcher_smtp_port = $mailcatcher_settings['smtp_port']
-  $mailcatcher_http_port = $mailcatcher_settings['http_port']
-  $mailcatcher_firewall_port =
-    "100 tcp/${mailcatcher_smtp_port}, ${mailcatcher_http_port}"
+  if ! defined(Puphpet::Firewall::Port[$mailcatcher_settings['smtp_port']]) {
+    puphpet::firewall::port { $mailcatcher_settings['smtp_port']: }
+  }
 
-  if ! defined(Firewall[$mailcatcher_firewall_port]) {
-    firewall { $mailcatcher_firewall_port:
-      port   => [$mailcatcher_smtp_port, $mailcatcher_http_port],
-      proto  => tcp,
-      action => 'accept',
-    }
+  if ! defined(Puphpet::Firewall::Port[$mailcatcher_settings['http_port']]) {
+    puphpet::firewall::port { $mailcatcher_settings['http_port']: }
   }
 
   $mailcatcher_path = $mailcatcher_settings['mailcatcher_path']

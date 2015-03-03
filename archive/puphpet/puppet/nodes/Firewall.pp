@@ -14,18 +14,25 @@ class { 'firewall': }
 
 # All ports defined in `firewall` yaml section
 each( $firewall_values['rules'] ) |$key, $rule| {
-  if ! defined(Puphpet::Firewall::Port[$rule['port']]) {
-    if has_key($rule, 'priority') {
-      $priority = $rule['priority']
-    } else {
-      $priority = 100
-    }
+  if is_string($rule['port']) {
+    $ports = [$rule['port']]
+  } else {
+    $ports = $rule['port']
+  }
 
-    puphpet::firewall::port { $rule['port']:
-      port     => $rule['port'],
-      protocol => $rule['proto'],
-      priority => $priority,
-      action   => $rule['action'],
+  each( $ports ) |$port| {
+    if ! defined(Puphpet::Firewall::Port[$port]) {
+      if has_key($rule, 'priority') {
+        $priority = $rule['priority']
+      } else {
+        $priority = 100
+      }
+
+      puphpet::firewall::port { $port:
+        protocol => $rule['proto'],
+        priority => $priority,
+        action   => $rule['action'],
+      }
     }
   }
 }
@@ -42,9 +49,7 @@ if has_key($vm_values, 'ssh')
   }
 
   if ! defined(Puphpet::Firewall::Port[$vm_values_ssh_port]) {
-    puphpet::firewall::port { $vm_values_ssh_port:
-      port => $vm_values_ssh_port,
-    }
+    puphpet::firewall::port { $vm_values_ssh_port: }
   }
 }
 
@@ -55,9 +60,7 @@ if has_key($vm_values, 'vm')
 {
   each( $vm_values['vm']['network']['forwarded_port'] ) |$key, $ports| {
     if ! defined(Puphpet::Firewall::Port[$ports['guest']]) {
-      puphpet::firewall::port { $ports['guest']:
-        port => $ports['guest'],
-      }
+      puphpet::firewall::port { $ports['guest']: }
     }
   }
 }

@@ -192,12 +192,8 @@ if hash_key_equals($apache_values, 'install', 1) {
 
     create_resources(apache::vhost, { "${key}" => $vhost_merged })
 
-    if ! defined(Firewall["100 tcp/${vhost['port']}"]) {
-      firewall { "100 tcp/${vhost['port']}":
-        port   => $vhost['port'],
-        proto  => tcp,
-        action => 'accept',
-      }
+    if ! defined(Puphpet::Firewall::Port[$vhost['port']]) {
+      puphpet::firewall::port { $vhost['port']: }
     }
   }
 
@@ -211,12 +207,8 @@ if hash_key_equals($apache_values, 'install', 1) {
     }
   }
 
-  if ! defined(Firewall['100 tcp/443']) {
-    firewall { '100 tcp/443':
-      port   => 443,
-      proto  => tcp,
-      action => 'accept',
-    }
+  if ! defined(Puphpet::Firewall::Port['443']) {
+    puphpet::firewall::port { '443': }
   }
 
   if count($apache_values['modules']) > 0 {

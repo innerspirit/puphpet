@@ -144,12 +144,8 @@ if hash_key_equals($nginx_values, 'install', 1) {
       }
     }
 
-    if ! defined(Firewall["100 tcp/${vhost['listen_port']}"]) {
-      firewall { "100 tcp/${vhost['listen_port']}":
-        port   => $vhost['listen_port'],
-        proto  => tcp,
-        action => 'accept',
-      }
+    if ! defined(Puphpet::Firewall::Port[$vhost['listen_port']]) {
+      puphpet::firewall::port { $vhost['listen_port']: }
     }
 
     $vhost_merged = merge($vhost, {
@@ -159,12 +155,8 @@ if hash_key_equals($nginx_values, 'install', 1) {
     create_resources(puphpet::nginx::host, { "${key}" => $vhost_merged })
   }
 
-  if ! defined(Firewall['100 tcp/443']) {
-    firewall { '100 tcp/443':
-      port   => 443,
-      proto  => tcp,
-      action => 'accept',
-    }
+  if ! defined(Puphpet::Firewall::Port['443']) {
+    puphpet::firewall::port { '443': }
   }
 
   if is_hash($nginx_values['upstreams'])
