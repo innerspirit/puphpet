@@ -20,7 +20,6 @@ class FrontController extends Controller implements Extension\ControllerInterfac
     {
         return $this->render('PuphpetExtensionNginxBundle:sections:vhost.html.twig', [
             'vhost'             => $this->getData()['empty_vhost'],
-            'available_engines' => $this->getData()['available_engines'],
         ]);
     }
 
@@ -36,7 +35,6 @@ class FrontController extends Controller implements Extension\ControllerInterfac
     {
         return $this->render('PuphpetExtensionNginxBundle:sections:upstream.html.twig', [
             'upstream'          => $this->getData()['empty_upstream'],
-            'available_engines' => $this->getData()['available_engines'],
         ]);
     }
 
