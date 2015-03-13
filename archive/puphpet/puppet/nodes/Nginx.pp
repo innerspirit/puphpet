@@ -28,14 +28,6 @@ if hash_key_equals($nginx_values, 'install', 1) {
     }
   }
 
-  if hash_key_equals($hhvm_values, 'install', 1) {
-    $fcgi_string = "127.0.0.1:${hhvm_values['settings']['port']}"
-  } elsif hash_key_equals($php_values, 'install', 1) {
-    $fcgi_string = '127.0.0.1:9000'
-  } else {
-    $fcgi_string = false
-  }
-
   if $::osfamily == 'redhat' {
     file { '/usr/share/nginx':
       ensure  => directory,
@@ -44,48 +36,6 @@ if hash_key_equals($nginx_values, 'install', 1) {
       group   => $webroot_group,
       require => Group[$webroot_group],
       before  => Package['nginx']
-    }
-  }
-
-  if hash_key_equals($hhvm_values, 'install', 1)
-    or hash_key_equals($php_values, 'install', 1)
-  {
-    $default_vhost = {
-      'server_name'          => '_',
-      'server_aliases'       => [],
-      'www_root'             => $puphpet::params::nginx_webroot_location,
-      'proxy'                => '',
-      'listen_port'          => 80,
-      'location'             => '\.php$',
-      'location_prepend'     => [],
-      'location_append'      => [],
-      'index_files'          => [
-        'index', 'index.html', 'index.htm', 'index.php'
-      ],
-      'envvars'              => [],
-      'ssl'                  => '0',
-      'ssl_cert'             => '',
-      'ssl_key'              => '',
-      'engine'               => 'php',
-      'client_max_body_size' => '1m'
-    }
-  } else {
-    $default_vhost = {
-      'server_name'          => '_',
-      'server_aliases'       => [],
-      'www_root'             => $puphpet::params::nginx_webroot_location,
-      'proxy'                => '',
-      'listen_port'          => 80,
-      'location'             => '/',
-      'location_prepend'     => [],
-      'location_append'      => [],
-      'index_files'          => ['index', 'index.html', 'index.htm'],
-      'envvars'              => [],
-      'ssl'                  => '0',
-      'ssl_cert'             => '',
-      'ssl_key'              => '',
-      'engine'               => false,
-      'client_max_body_size' => '1m'
     }
   }
 
@@ -98,9 +48,46 @@ if hash_key_equals($nginx_values, 'install', 1) {
 
   if hash_key_equals($nginx_values['settings'], 'default_vhost', 1) {
     $nginx_vhosts = merge($nginx_values['vhosts'], {
-      'default' => $default_vhost,
+      '_'       => {
+        'server_name'          => '_',
+        'server_aliases'       => [],
+        'www_root'             => $puphpet::params::nginx_webroot_location,
+        'listen_port'          => 80,
+        'client_max_body_size' => '1m',
+        'use_default_location' => false,
+        'vhost_cfg_append'     => {'sendfile' => 'off'},
+        'index_files'          => [
+          'index', 'index.html', 'index.htm', 'index.php'
+        ],
+        'locations'            => [
+          {
+            'location'              => '/',
+            'try_files'             => ['$uri', '$uri/', 'index.php',],
+            'fastcgi'               => '',
+            'fastcgi_index'         => '',
+            'fastcgi_split_path'    => '',
+            'fast_cgi_params_extra' => [],
+            'index_files'           => [],
+          },
+          {
+            'location'              => '~ \.php$',
+            'try_files'             => [
+              '$uri', '$uri/', 'index.php', '/index.php$is_args$args'
+            ],
+            'fastcgi'               => '127.0.0.1:9000',
+            'fastcgi_index'         => 'index.php',
+            'fastcgi_split_path'    => '^(.+\.php)(/.*)$',
+            'fast_cgi_params_extra' => [
+              'SCRIPT_FILENAME $request_filename',
+              'APP_ENV dev',
+            ],
+            'index_files'           => [],
+          }
+        ]
+      },
     })
 
+    # Force nginx to be managed exclusively through puppet module
     if ! defined(File[$puphpet::params::nginx_default_conf_location]) {
       file { $puphpet::params::nginx_default_conf_location:
         ensure  => absent,
@@ -129,27 +116,54 @@ if hash_key_equals($nginx_values, 'install', 1) {
           require => Exec["exec mkdir -p ${vhost['www_root']} @ key ${key}"],
         }
       }
+
+      $server_names = unique(flatten(
+        concat([$vhost['server_name']], $vhost['server_aliases'])
+      ))
+
+      $vhost_merged = delete(merge($vhost, {
+        'server_name'          => $server_names,
+        'use_default_location' => false,
+      }), ['server_aliases', 'proxy', 'locations'])
+
+      create_resources(nginx::resource::vhost, { "${key}" => $vhost_merged })
+
+      each( $vhost['locations'] ) |$lkey, $location| {
+        # Deletes empty cron jobs
+        $location_trimmed = delete_values($location, '')
+
+        $location_no_root = delete(merge({
+          'vhost'                      => $key,
+          'location_custom_cfg_append' => prefix(
+            $location_trimmed['fast_cgi_params_extra'], 'fastcgi_param '
+          ),
+        }, $location_trimmed), 'fast_cgi_params_extra')
+
+        if ! defined($location_no_root['fastcgi'])
+          or empty($location_no_root['fastcgi'])
+        {
+          $location_merged = merge({
+            'www_root' => $vhost['www_root'],
+          }, $location_no_root)
+        } else {
+          $location_merged = $location_no_root
+        }
+
+        create_resources(nginx::resource::location, { "${lkey}" => $location_merged })
+      }
     }
 
     if ! defined(Puphpet::Firewall::Port[$vhost['listen_port']]) {
       puphpet::firewall::port { $vhost['listen_port']: }
     }
-
-    $vhost_merged = merge($vhost, {
-      'fcgi_string' => $fcgi_string,
-    })
-
-    create_resources(puphpet::nginx::host, { "${key}" => $vhost_merged })
   }
 
   if ! defined(Puphpet::Firewall::Port['443']) {
     puphpet::firewall::port { '443': }
   }
 
-  if is_hash($nginx_values['upstreams'])
-    and count($nginx_values['upstreams']) > 0
-  {
-    notify{ 'Adding upstreams': }
+  if count($nginx_values['upstreams']) > 0 {
+    notify { 'Adding upstreams': }
     create_resources(puphpet::nginx::upstream, $nginx_values['upstreams'])
   }
 

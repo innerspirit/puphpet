@@ -5,6 +5,7 @@ namespace Puphpet\Extension\NginxBundle\Controller;
 use Puphpet\MainBundle\Extension;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 
 class FrontController extends Controller implements Extension\ControllerInterface
 {
@@ -23,6 +24,13 @@ class FrontController extends Controller implements Extension\ControllerInterfac
         ]);
     }
 
+    public function locationAction(Request $request)
+    {
+        return $this->render('PuphpetExtensionNginxBundle:sections:location.html.twig', [
+            'vhostId'  => $request->get('vhostId'),
+            'location' => $this->getData()['empty_location'],
+        ]);
+    }
 
     public function upstreamAction()
     {
