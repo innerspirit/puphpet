@@ -129,8 +129,9 @@ if hash_key_equals($nginx_values, 'install', 1) {
       create_resources(nginx::resource::vhost, { "${key}" => $vhost_merged })
 
       each( $vhost['locations'] ) |$lkey, $location| {
-        # Deletes empty cron jobs
-        $location_trimmed = delete_values($location, '')
+        $location_trimmed = merge({
+          'fast_cgi_params_extra' => [],
+        }, delete_values($location, ''))
 
         $location_no_root = delete(merge({
           'vhost'                      => $key,
