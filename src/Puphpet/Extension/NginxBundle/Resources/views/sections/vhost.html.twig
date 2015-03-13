@@ -146,8 +146,6 @@
                            id="nginx-vhosts-{{ uniqid }}-ssl"
                            name="nginx[vhosts][{{ uniqid }}][ssl]" value="1"
                            data-hide-on-uncheck="#nginx-vhosts-{{ uniqid }}-ssl_options"
-                           data-update-on-check-nginx[vhosts][{{ uniqid }}][listen_port]="443"
-                           data-update-on-uncheck-nginx[vhosts][{{ uniqid }}][listen_port]="80"
                            {% if vhost.ssl is defined and vhost.ssl %}checked{% endif %} />
                     Enable SSL
                 </label>
@@ -184,6 +182,19 @@
                            name="nginx[vhosts][{{ uniqid }}][ssl_key]"
                            placeholder="/leave/blank/for/sample"
                            value="{% if vhost.ssl_key is defined %}{{ vhost.ssl_key }}{% endif %}" class="form-control" />
+                </div>
+            </div>
+
+            <div class="row form-group">
+                <div class="col-md-6">
+                    <label for="nginx-vhosts-{{ uniqid }}-ssl_port">
+                        {{ popover.small('Should be different from the normal Port chosen above!') }}
+                        SSL Port
+                    </label>
+                    <input type="text" id="nginx-vhosts-{{ uniqid }}-ssl_port"
+                           name="nginx[vhosts][{{ uniqid }}][ssl_port]"
+                           value="{{ vhost.ssl_port }}"
+                           class="form-control" />
                 </div>
             </div>
 

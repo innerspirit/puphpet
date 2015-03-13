@@ -46,6 +46,7 @@ if hash_key_equals($nginx_values, 'install', 1) {
 
   create_resources('class', { 'nginx' => $nginx_settings })
 
+  # Creates a default vhost entry if user chose to do so
   if hash_key_equals($nginx_values['settings'], 'default_vhost', 1) {
     $nginx_vhosts = merge($nginx_values['vhosts'], {
       '_'       => {
@@ -117,29 +118,70 @@ if hash_key_equals($nginx_values, 'install', 1) {
         }
       }
 
+      # the gui passes "server_name" and "server_aliases"
+      # "server_aliases" is not actually in puppet-nginx
       $server_names = unique(flatten(
         concat([$vhost['server_name']], $vhost['server_aliases'])
       ))
 
+      $ssl = array_true($vhost, 'ssl') ? {
+        true    => true,
+        default => false,
+      }
+      $ssl_cert = array_true($vhost, 'ssl_cert') ? {
+        true    => $vhost['ssl_cert'],
+        default => $puphpet::params::ssl_cert_location,
+      }
+      $ssl_key = array_true($vhost, 'ssl_key') ? {
+        true    => $vhost['ssl_key'],
+        default => $puphpet::params::ssl_key_location,
+      }
+      $ssl_port = array_true($vhost, 'ssl_port') ? {
+        true    => $vhost['ssl_port'],
+        default => '443',
+      }
+      $rewrite_to_https = array_true($vhost, 'rewrite_to_https') ? {
+        true    => true,
+        default => false,
+      }
+
+      # puppet-nginx is stupidly strict about ssl value datatypes
       $vhost_merged = delete(merge($vhost, {
         'server_name'          => $server_names,
         'use_default_location' => false,
+        'ssl'                  => $ssl,
+        'ssl_cert'             => $ssl_cert,
+        'ssl_key'              => $ssl_key,
+        'ssl_port'             => $ssl_port,
+        'rewrite_to_https'     => $rewrite_to_https,
       }), ['server_aliases', 'proxy', 'locations'])
 
       create_resources(nginx::resource::vhost, { "${key}" => $vhost_merged })
 
       each( $vhost['locations'] ) |$lkey, $location| {
+        # remove empty values
         $location_trimmed = merge({
           'fast_cgi_params_extra' => [],
         }, delete_values($location, ''))
 
+        # Takes gui ENV vars: fastcgi_param {ENV_NAME} {VALUE}
+        $location_custom_cfg_append = prefix(
+          $location_trimmed['fast_cgi_params_extra'],
+          'fastcgi_param '
+        )
+
+        # separate from $location_trimmed because some values
+        # really need to be set to a default.
+        # Removes fast_cgi_params_extra because it only exists in gui
+        # not puppet-nginx
         $location_no_root = delete(merge({
           'vhost'                      => $key,
-          'location_custom_cfg_append' => prefix(
-            $location_trimmed['fast_cgi_params_extra'], 'fastcgi_param '
-          ),
+          'ssl'                        => $ssl,
+          'location_custom_cfg_append' => $location_custom_cfg_append,
         }, $location_trimmed), 'fast_cgi_params_extra')
 
+        # If www_root was removed with all the trimmings,
+        # add it back it
         if ! defined($location_no_root['fastcgi'])
           or empty($location_no_root['fastcgi'])
         {
