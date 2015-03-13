@@ -42,10 +42,10 @@
                         FastCGI Pass
                     </label>
                     <input type="text"
-                           id="nginx-vhosts-{{ vhostId }}-locations-{{ uniqid }}-fastcgi_pass"
-                           name="nginx[vhosts][{{ vhostId }}][locations][{{ uniqid }}][fastcgi_pass]"
+                           id="nginx-vhosts-{{ vhostId }}-locations-{{ uniqid }}-fastcgi"
+                           name="nginx[vhosts][{{ vhostId }}][locations][{{ uniqid }}][fastcgi]"
                            placeholder="127.0.0.1:9000"
-                           value="{% if location.fastcgi_pass is defined %}{{ location.fastcgi_pass }}{% endif %}"
+                           value="{{ location.fastcgi }}"
                            class="form-control" />
                 </div>
 
@@ -57,7 +57,7 @@
                            id="nginx-vhosts-{{ vhostId }}-locations-{{ uniqid }}-fastcgi_index"
                            name="nginx[vhosts][{{ vhostId }}][locations][{{ uniqid }}][fastcgi_index]"
                            placeholder="index.php"
-                           value="{% if location.fastcgi_index is defined %}{{ location.fastcgi_index }}{% endif %}"
+                           value="{{ location.fastcgi_index }}"
                            class="form-control" />
                 </div>
             </div>
@@ -71,7 +71,7 @@
                            id="nginx-vhosts-{{ vhostId }}-locations-{{ uniqid }}-fastcgi_split_path"
                            name="nginx[vhosts][{{ vhostId }}][locations][{{ uniqid }}][fastcgi_split_path]"
                            placeholder="^(.+\.php)(/.*)$"
-                           value="{% if location.fastcgi_split_path is defined %}{{ location.fastcgi_split_path }}{% endif %}"
+                           value="{{ location.fastcgi_split_path }}"
                            class="form-control" />
                 </div>
 
