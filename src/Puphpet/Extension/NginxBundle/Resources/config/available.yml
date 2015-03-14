@@ -1,7 +1,7 @@
 empty_upstream:
     name: backend
-    fail_timeout: 10s
     members: []
+    upstream_fail_timeout: 10s
 
 empty_vhost:
     server_name: ~
